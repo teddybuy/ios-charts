@@ -23,12 +23,41 @@ public class PieChartData: ChartData
     public override init(xVals: [String?]?, dataSets: [ChartDataSet]?)
     {
         super.init(xVals: xVals, dataSets: dataSets)
+        _yValsAux = nil
     }
 
     public override init(xVals: [NSObject]?, dataSets: [ChartDataSet]?)
     {
         super.init(xVals: xVals, dataSets: dataSets)
+        _yValsAux = nil
     }
+
+    public func SetYValsAux(yVals: [ChartDataEntry]) -> Bool
+    {
+        println("\(yVals.count) \(dataSet?.yVals.count)");
+        if yVals.count == dataSet!.yVals.count
+        {
+            _yValsAux = yVals
+            return true
+        } else {
+            return false
+        }
+    }
+
+    public func GetYValsAuxAt(index: Int) -> ChartDataEntry?
+    {
+        if let c = _yValsAux {
+            if (c.count <= index) {
+                return nil
+            } else {
+                return c[index]
+            }
+        } else {
+            return nil
+        }
+    }
+
+    var _yValsAux: [ChartDataEntry]?
 
     var dataSet: PieChartDataSet?
     {
@@ -41,10 +70,12 @@ public class PieChartData: ChartData
             if (newValue != nil)
             {
                 dataSets = [newValue!]
+                _yValsAux = nil
             }
             else
             {
                 dataSets = []
+                _yValsAux = nil
             }
         }
     }

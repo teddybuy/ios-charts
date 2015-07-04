@@ -67,9 +67,9 @@ public class PieChartRenderer: ChartDataRendererBase
         
         var entries = dataSet.yVals
         var drawAngles = _chart.drawAngles
-        var circleBox = _chart.circleBox
-        var radius = _chart.radius
-        var innerRadius = drawHoleEnabled && holeTransparent ? radius * holeRadiusPercent : 0.0
+        var circleBoxOrig = _chart.circleBox
+        var radiusOuter = _chart.radius
+        var innerRadius = drawHoleEnabled && holeTransparent ? radiusOuter * holeRadiusPercent : 0.0
         
         CGContextSaveGState(context)
         
@@ -83,9 +83,7 @@ public class PieChartRenderer: ChartDataRendererBase
             // draw only if the value is greater than zero
             if ((abs(e.value) > 0.000001))
             {
-                if (!_chart.needsHighlight(xIndex: e.xIndex,
-                    dataSetIndex: _chart.data!.indexOfDataSet(dataSet)))
-                {
+                for k in 0...1 {
                     var startAngle = angle + sliceSpace / 2.0
                     var sweepAngle = newangle * _animator.phaseY
                         - sliceSpace / 2.0
@@ -95,11 +93,30 @@ public class PieChartRenderer: ChartDataRendererBase
                     }
                     var endAngle = startAngle + sweepAngle
                     
+                    var highlighted = _chart.needsHighlight(xIndex: e.xIndex,
+                        dataSetIndex: _chart.data!.indexOfDataSet(dataSet));
+                    
+                    var midAngle = (startAngle + endAngle) / 2 * ChartUtils.Math.FDEG2RAD
+                    var shift:CGFloat = highlighted ? dataSet.selectionShift : 0.0
+                    var circleBox = CGRect(
+                        x: circleBoxOrig.origin.x + (highlighted ? cos(midAngle) * highlightShift - shift : 0.0),
+                        y: circleBoxOrig.origin.y + (highlighted ? sin(midAngle) * highlightShift - shift : 0.0),
+                        width: circleBoxOrig.size.width + shift * 2.0,
+                        height: circleBoxOrig.size.height + shift * 2.0)
+                    
                     var path = CGPathCreateMutable()
                     CGPathMoveToPoint(path, nil, circleBox.midX, circleBox.midY)
+
+                    var radiusAlter :CGFloat = 0;
+                    if let alterEntry = (_chart.data as? PieChartData)!.GetYValsAuxAt(j) {
+                        if alterEntry.value < e.value && alterEntry.value > 0 && e.value > 0 {
+                            radiusAlter = radiusOuter * CGFloat(sqrt(alterEntry.value / e.value))
+                        }
+                    }
+                    var radius = ((k == 0) ? radiusOuter : radiusAlter)
                     CGPathAddArc(path, nil, circleBox.midX, circleBox.midY, radius, startAngle * ChartUtils.Math.FDEG2RAD, endAngle * ChartUtils.Math.FDEG2RAD, false)
                     CGPathCloseSubpath(path)
-                    
+                    innerRadius = ((k == 1) ? 0 : radiusAlter)
                     if (innerRadius > 0.0)
                     {
                         CGPathMoveToPoint(path, nil, circleBox.midX, circleBox.midY)
@@ -109,7 +126,9 @@ public class PieChartRenderer: ChartDataRendererBase
                     
                     CGContextBeginPath(context)
                     CGContextAddPath(context, path)
-                    CGContextSetFillColorWithColor(context, dataSet.colorAt(j).CGColor)
+                    var colorIndex = j //((k + j) < entries.count ? k + j : 0)
+                    var changedColor = changeColor(color: dataSet.colorAt(colorIndex), brightChange: k == 0 ? 1 : 0.7, satChange: k == 0 ? 1.2 : 1.5)
+                    CGContextSetFillColorWithColor(context, changedColor.CGColor)
                     CGContextEOFillPath(context)
                 }
             }
@@ -184,11 +203,16 @@ public class PieChartRenderer: ChartDataRendererBase
                 
                 // offset needed to center the drawn text in the slice
                 var offset = drawAngles[cnt] / 2.0
+
+                var highlightShiftR: CGFloat = 0;
+                if (_chart.needsHighlight(xIndex: entries[j].xIndex,
+                    dataSetIndex: _chart.data!.indexOfDataSet(dataSet))) {
+                        highlightShiftR = highlightShift
+                }
                 
                 // calculate the text position
-                var x = (r * cos(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.x)
-                var y = (r * sin(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.y)
-                
+                var x = ((r + highlightShiftR) * cos(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.x)
+                var y = ((r + highlightShiftR) * sin(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.y)
                 var value = usePercentValuesEnabled ? entries[j].value / _chart.yValueSum * 100.0 : entries[j].value
                 
                 var val = formatter!.stringFromNumber(value)!
@@ -304,11 +328,13 @@ public class PieChartRenderer: ChartDataRendererBase
     
     public override func drawHighlighted(#context: CGContext, indices: [ChartHighlight])
     {
+        return
+
         if (_chart.data === nil)
         {
             return
         }
-        
+
         CGContextSaveGState(context)
         
         var rotationAngle = _chart.rotationAngle
@@ -351,12 +377,6 @@ public class PieChartRenderer: ChartDataRendererBase
             var shift = set.selectionShift
             var circleBox = _chart.circleBox
             
-            var highlighted = CGRect(
-                x: circleBox.origin.x - shift,
-                y: circleBox.origin.y - shift,
-                width: circleBox.size.width + shift * 2.0,
-                height: circleBox.size.height + shift * 2.0)
-            
             CGContextSetFillColorWithColor(context, set.colorAt(xIndex).CGColor)
             
             // redefine the rect that contains the arc so that the highlighted pie is not cut off
@@ -368,6 +388,12 @@ public class PieChartRenderer: ChartDataRendererBase
                 sweepAngle = 0.0
             }
             var endAngle = startAngle + sweepAngle
+            var midAngle = (startAngle + endAngle) / 2 * ChartUtils.Math.FDEG2RAD
+            var highlighted = CGRect(
+                x: circleBox.origin.x + cos(midAngle) * highlightShift - shift/*shift*/,
+                y: circleBox.origin.y + sin(midAngle) * highlightShift - shift/*shift*/,
+                width: circleBox.size.width + shift * 2.0 /*+ shift * 2.0*/,
+                height: circleBox.size.height + shift * 2.0 /*+ shift * 2.0*/)
             
             var path = CGPathCreateMutable()
             CGPathMoveToPoint(path, nil, highlighted.midX, highlighted.midY)
@@ -388,4 +414,27 @@ public class PieChartRenderer: ChartDataRendererBase
         
         CGContextRestoreGState(context)
     }
+
+    func changeColor(#color: UIColor, brightChange:CGFloat, satChange:CGFloat) -> UIColor
+    {
+    
+        var hue : CGFloat = 0, saturation : CGFloat = 0, brightness : CGFloat = 0, alpha : CGFloat = 0;
+        if color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) {
+            brightness += (brightChange-1.0);
+            brightness = max(min(brightness, 1.0), 0.0);
+            saturation += (satChange-1.0);
+            saturation = max(min(saturation, 1.0), 0.0);
+            return UIColor(hue: hue, saturation:saturation, brightness:brightness, alpha:alpha);
+        }
+        
+        var white: CGFloat = 0;
+        if color.getWhite(&white, alpha:&alpha) {
+            white += (brightChange-1.0);
+            white = max(min(white, 1.0), 0.0);
+            return UIColor(white: white, alpha:alpha);
+        }
+    
+        return UIColor.blackColor();
+    }
+    var highlightShift: CGFloat = 7.0
 }
