@@ -83,11 +83,14 @@
     double mult = range;
     
     NSMutableArray *yVals1 = [[NSMutableArray alloc] init];
+    NSMutableArray *yVals2 = [[NSMutableArray alloc] init];
     
     // IMPORTANT: In a PieChart, no values (Entry) should have the same xIndex (even if from different DataSets), since no values can be drawn above each other.
     for (int i = 0; i < count; i++)
     {
-        [yVals1 addObject:[[BarChartDataEntry alloc] initWithValue:(arc4random_uniform(mult) + mult / 5) xIndex:i]];
+        double value = arc4random_uniform(mult) + mult / 5;
+        [yVals1 addObject:[[BarChartDataEntry alloc] initWithValue:(value) xIndex:i]];
+        [yVals2 addObject:[[BarChartDataEntry alloc] initWithValue:(value / (i + 2)) xIndex:i]];
     }
     
     NSMutableArray *xVals = [[NSMutableArray alloc] init];
@@ -113,6 +116,7 @@
     dataSet.colors = colors;
     
     PieChartData *data = [[PieChartData alloc] initWithXVals:xVals dataSet:dataSet];
+    [data SetYValsAux: yVals2];
     
     NSNumberFormatter *pFormatter = [[NSNumberFormatter alloc] init];
     pFormatter.numberStyle = NSNumberFormatterPercentStyle;
