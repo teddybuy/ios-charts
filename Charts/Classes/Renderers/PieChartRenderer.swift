@@ -127,7 +127,8 @@ public class PieChartRenderer: ChartDataRendererBase
                     CGContextBeginPath(context)
                     CGContextAddPath(context, path)
                     var colorIndex = j //((k + j) < entries.count ? k + j : 0)
-                    var changedColor = changeColor(color: dataSet.colorAt(colorIndex), brightChange: k == 0 ? 1 : 0.7, satChange: k == 0 ? 1.2 : 1.5)
+                    var changedColor = changeColor(color: dataSet.colorAt(colorIndex), brightChange: k == 0 ? 1 : 0.9,
+                                                   satChange: k == 0 ? 1 : 0.9, hueChange: k == 0 ? 1 : 1.04)
                     CGContextSetFillColorWithColor(context, changedColor.CGColor)
                     CGContextEOFillPath(context)
                 }
@@ -415,7 +416,7 @@ public class PieChartRenderer: ChartDataRendererBase
         CGContextRestoreGState(context)
     }
 
-    func changeColor(#color: UIColor, brightChange:CGFloat, satChange:CGFloat) -> UIColor
+    func changeColor(#color: UIColor, brightChange:CGFloat, satChange:CGFloat, hueChange:CGFloat) -> UIColor
     {
     
         var hue : CGFloat = 0, saturation : CGFloat = 0, brightness : CGFloat = 0, alpha : CGFloat = 0;
@@ -424,6 +425,8 @@ public class PieChartRenderer: ChartDataRendererBase
             brightness = max(min(brightness, 1.0), 0.0);
             saturation += (satChange-1.0);
             saturation = max(min(saturation, 1.0), 0.0);
+            hue += (hueChange - 1.0);
+            hue = max(min(hue, 1.0), 0.0);
             return UIColor(hue: hue, saturation:saturation, brightness:brightness, alpha:alpha);
         }
         

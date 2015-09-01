@@ -675,7 +675,13 @@ public class PieRadarChartViewBase: ChartViewBase
             _decelerationDisplayLink = nil
         }
     }
-    
+    public override func highlightValue(#xIndex: Int, dataSetIndex: Int, callDelegate: Bool)
+    {
+        super.highlightValue(xIndex: xIndex, dataSetIndex: dataSetIndex, callDelegate: callDelegate)
+        if (xIndex < 0 || dataSetIndex < 0) {
+            _lastHighlight = nil;
+        }
+    }
     @objc private func decelerationLoop()
     {
         var currentTime = CACurrentMediaTime()
@@ -724,9 +730,11 @@ public class PieRadarChartViewBase: ChartViewBase
             if (distance > self.radius)
             {
                 // if no slice was touched, highlight nothing
+                /*
                 self.highlightValues(nil)
                 _lastHighlight = nil
                 _lastHighlight = nil
+                */
             }
             else
             {
