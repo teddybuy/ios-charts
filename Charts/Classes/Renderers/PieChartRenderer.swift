@@ -105,6 +105,18 @@ public class PieChartRenderer: ChartDataRendererBase
                         width: circleBoxOrig.size.width + shift * 2.0,
                         height: circleBoxOrig.size.height + shift * 2.0)
                     
+                    var highlighted = _chart.needsHighlight(xIndex: e.xIndex,
+                        dataSetIndex: _chart.data!.indexOfDataSet(dataSet));
+                    
+                    var midAngle = (startAngle + endAngle) / 2 * ChartUtils.Math.FDEG2RAD
+                    var shift:CGFloat = highlighted ? dataSet.selectionShift : 0.0
+                    var circleBox = CGRect(
+                        x: circleBoxOrig.origin.x + (highlighted ? cos(midAngle) * highlightShift - shift : 0.0),
+                        y: circleBoxOrig.origin.y + (highlighted ? sin(midAngle) * highlightShift - shift : 0.0),
+                        width: circleBoxOrig.size.width + shift * 2.0,
+                        height: circleBoxOrig.size.height + shift * 2.0)
+                    
+                    var path = CGPathCreateMutable()
                     CGPathMoveToPoint(path, nil, circleBox.midX, circleBox.midY)
 
                     var radiusAlter :CGFloat = 0;
@@ -375,8 +387,8 @@ public class PieChartRenderer: ChartDataRendererBase
             
             let sliceDegrees = drawAngles[xIndex]
             
-            let shift = set.selectionShift
-            let circleBox = _chart.circleBox
+            var shift = set.selectionShift
+            var circleBox = _chart.circleBox
             
             CGContextSetFillColorWithColor(context, set.colorAt(xIndex).CGColor)
             
