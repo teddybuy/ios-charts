@@ -416,7 +416,7 @@ public class PieChartRenderer: ChartDataRendererBase
         CGContextRestoreGState(context)
     }
 
-    func changeColor(#color: UIColor, brightChange:CGFloat, satChange:CGFloat, hueChange:CGFloat) -> UIColor
+    func changeColor(color color: UIColor, brightChange:CGFloat, satChange:CGFloat, hueChange:CGFloat) -> UIColor
     {
     
         var hue : CGFloat = 0, saturation : CGFloat = 0, brightness : CGFloat = 0, alpha : CGFloat = 0;

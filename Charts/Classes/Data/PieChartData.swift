@@ -34,7 +34,7 @@ public class PieChartData: ChartData
 
     public func SetYValsAux(yVals: [ChartDataEntry]) -> Bool
     {
-        println("\(yVals.count) \(dataSet?.yVals.count)");
+        print("\(yVals.count) \(dataSet?.yVals.count)");
         if yVals.count == dataSet!.yVals.count
         {
             _yValsAux = yVals
