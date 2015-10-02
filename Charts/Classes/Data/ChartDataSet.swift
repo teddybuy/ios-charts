@@ -18,6 +18,7 @@ import UIKit
 public class ChartDataSet: NSObject
 {
     public var colors = [UIColor]()
+    public var colorsAux = [UIColor]()
     internal var _yVals: [ChartDataEntry]!
     internal var _yMax = Double(0.0)
     internal var _yMin = Double(0.0)
@@ -70,6 +71,7 @@ public class ChartDataSet: NSObject
         
         // default color
         colors.append(UIColor(red: 140.0/255.0, green: 234.0/255.0, blue: 255.0/255.0, alpha: 1.0))
+        colorsAux.append(UIColor(red: 100.0/255.0, green: 200.0/255.0, blue: 220.0/255.0, alpha: 1.0))
         
         self.calcMinMax(start: _lastStart, end: _lastEnd)
         self.calcYValueSum()
@@ -425,6 +427,15 @@ public class ChartDataSet: NSObject
             index = 0
         }
         return colors[index % colors.count]
+    }
+    
+    public func colorAuxAt(var index: Int) -> UIColor
+    {
+        if (index < 0)
+        {
+            index = 0
+        }
+        return colorsAux[index % colorsAux.count]
     }
     
     public var isVisible: Bool

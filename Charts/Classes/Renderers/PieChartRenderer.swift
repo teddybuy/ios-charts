@@ -70,6 +70,7 @@ public class PieChartRenderer: ChartDataRendererBase
         var circleBoxOrig = _chart.circleBox
         var radiusOuter = _chart.radius
         var innerRadius = drawHoleEnabled && holeTransparent ? radiusOuter * holeRadiusPercent : 0.0
+       
         
         CGContextSaveGState(context)
         
@@ -80,10 +81,19 @@ public class PieChartRenderer: ChartDataRendererBase
             
             let e = entries[j]
             
+            var roseLevel = [0,1];
+            
+            if let _ = (_chart.data as? PieChartData)!.GetYValsAuxAt(j) {
+                roseLevel = [0,1];
+            } else {
+                roseLevel = [0];
+            }
+            
             // draw only if the value is greater than zero
             if ((abs(e.value) > 0.000001))
             {
-                for k in 0...1 {
+                
+                for k in roseLevel {
                     var startAngle = angle + sliceSpace / 2.0
                     var sweepAngle = newangle * _animator.phaseY
                         - sliceSpace / 2.0
@@ -116,7 +126,9 @@ public class PieChartRenderer: ChartDataRendererBase
                     var radius = ((k == 0) ? radiusOuter : radiusAlter)
                     CGPathAddArc(path, nil, circleBox.midX, circleBox.midY, radius, startAngle * ChartUtils.Math.FDEG2RAD, endAngle * ChartUtils.Math.FDEG2RAD, false)
                     CGPathCloseSubpath(path)
-                    innerRadius = ((k == 1) ? 0 : radiusAlter)
+                    if (roseLevel.count == 2 ) {
+                        innerRadius = ((k == 1) ? 0 : radiusAlter)
+                    }
                     if (innerRadius > 0.0)
                     {
                         CGPathMoveToPoint(path, nil, circleBox.midX, circleBox.midY)
@@ -126,9 +138,10 @@ public class PieChartRenderer: ChartDataRendererBase
                     
                     CGContextBeginPath(context)
                     CGContextAddPath(context, path)
-                    var colorIndex = j //((k + j) < entries.count ? k + j : 0)
-                    var changedColor = changeColor(color: dataSet.colorAt(colorIndex), brightChange: k == 0 ? 1 : 0.9,
-                                                   satChange: k == 0 ? 1 : 0.9, hueChange: k == 0 ? 1 : 1.04)
+                    let colorIndex = j //((k + j) < entries.count ? k + j : 0)
+                    let changedColor = k == 0 ? dataSet.colorAt(colorIndex) : dataSet.colorAuxAt(colorIndex)
+                    /*var changedColor = changeColor(color: dataSet.colorAt(colorIndex), brightChange: k == 0 ? 1 : 0.9,
+                                                   satChange: k == 0 ? 1 : 0.9, hueChange: k == 0 ? 1 : 1.04)*/
                     CGContextSetFillColorWithColor(context, changedColor.CGColor)
                     CGContextEOFillPath(context)
                 }
